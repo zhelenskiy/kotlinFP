@@ -28,7 +28,7 @@ object EitherMonad {
     fun <L, R> returns(item: R): Either<L, R> = Either.Right(item)
     fun <R> fail(msg: String): Either<String, R> = Either.Left(msg)
     operator fun <L, R> invoke(f: EitherMonad.() -> Either<L, R>): Either<L, R> = this.f()
-    operator fun <L> invoke(): Either<L, Unit> = returns(Unit)
+    operator fun invoke(): Either<Unit, Unit> = returns(Unit)
 
     fun <L, T1, R> ((T1) -> R).lift(a: Either<L, T1>) = a.fmap(this)
     fun <L, T1, T2, R> ((T1, T2) -> R).lift(a: Either<L, T1>, b: Either<L, T2>) =
