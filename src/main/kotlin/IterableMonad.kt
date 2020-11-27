@@ -1,17 +1,20 @@
 object IterableMonad {
     data class Wrapper<T>(val values: Iterable<T>) : Iterable<T> {
+        constructor(vararg value: T) : this(value.asIterable())
         fun <R> fmap(f: (T) -> R): Wrapper<R> = Wrapper(this.values.map(f))
         fun <R> then(f: (T) -> Wrapper<R>): Wrapper<R> = Wrapper(this.values.flatMap { f(it).values })
-        fun <R> thenIgnoring(f: (T) -> Wrapper<R>): Wrapper<T> =
-            Wrapper(this.values.flatMap { x -> f(x).fmap { x } })
+        fun <R> thenIgnoring(f: (T) -> Wrapper<R>): Wrapper<T> = Wrapper(this.values.flatMap { i -> f(i).values.map { i } })
 
-        infix fun or(other: Wrapper<T>) = this + other
+        infix fun or(other: Wrapper<T>) = Wrapper(this.values + other.values)
         override fun iterator() = values.iterator()
     }
 
     fun <T> returns(item: T): Wrapper<T> = Wrapper(listOf(item))
+    fun <T> returns(vararg items: T): Wrapper<T> = Wrapper(items.asIterable())
     operator fun <T> invoke(f: IterableMonad.() -> Wrapper<T>): Wrapper<T> = this.f()
     operator fun invoke(): Wrapper<Unit> = returns(Unit)
+
+    fun<T> fail(@Suppress("UNUSED_PARAMETER") msg: String = "") : Wrapper<T> = Wrapper()
 
     fun <T1, R> ((T1) -> R).lift(a: Wrapper<T1>) = a.fmap(this)
     fun <T1, T2, R> ((T1, T2) -> R).lift(a: Wrapper<T1>, b: Wrapper<T2>) =
